@@ -1,8 +1,8 @@
-name: Update Hantavirus Dashboard
+name: Auto-Update Dashboard with Live Data
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 */6 * * *'  # Every 6 hours
   workflow_dispatch:
   push:
     branches: [main]
@@ -22,15 +22,15 @@ jobs:
           node-version: '18'
       
       - name: Install dependencies
-        run: npm install
+        run: npm install axios cheerio
       
-      - name: Fetch and update data
-        run: node update-dashboard.js
+      - name: Fetch live data and update dashboard
+        run: node update-dashboard-live.js
       
-      - name: Commit changes
+      - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add dashboard.html
-          git commit -m "Auto-update: Dashboard data refreshed at $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "No changes to commit"
+          git config --local user.name "GitHub Action Bot"
+          git add index.html
+          git commit -m "Auto-update: Dashboard refreshed with live WHO/CDC/ECDC data at $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "No changes to commit"
           git push
