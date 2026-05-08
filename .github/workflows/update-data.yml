@@ -2,7 +2,7 @@ name: Auto-Update Dashboard with Live Data
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # Every 6 hours
+    - cron: '0 */6 * * *'
   workflow_dispatch:
   push:
     branches: [main]
@@ -13,21 +13,15 @@ jobs:
     
     steps:
       - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+      - name: Update dashboard with live data
+        run: |
+          bash update-dashboard.sh
       
-      - name: Fetch live data and update dashboard
-        run: node update-dashboard.js
-      
-      - name: Commit and push changes
+      - name: Commit and push
         run: |
           git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action Bot"
+          git config --local user.name "Dashboard Bot"
           git add index.html
-          git commit -m "Auto-update: Dashboard refreshed with live WHO/CDC/ECDC data at $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "No changes to commit"
+          git commit -m "Auto-update: Dashboard refreshed at $(date -u +'%Y-%m-%d %H:%M UTC')" || echo "No changes"
           git push
