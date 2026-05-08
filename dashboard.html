@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hantavirus Monitor - Global Outbreak Tracker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 { font-size: 32px; margin-bottom: 8px; color: #2c3e50; }
+        .header p { color: #7f8c8d; margin-bottom: 4px; }
+        .header .timestamp { color: #95a5a6; font-size: 12px; }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            color: #2c3e50;
+            cursor: pointer;
+            font-weight: 400;
+            font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        
+        .tab-btn.active {
+            background: #3498db;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+        }
+        
+        .tab-btn:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .metric-label { font-size: 12px; color: #7f8c8d; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
+        .metric-value { font-size: 28px; font-weight: 700; color: #2c3e50; margin-bottom: 12px; }
+        .metric-stat { font-size: 13px; color: #7f8c8d; display: flex; justify-content: space-between; }
+        
+        .alert-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
+        }
+        
+        .alert-critical { border-left-color: #e74c3c; }
+        .alert-high { border-left-color: #f39c12; }
+        .alert-medium { border-left-color: #3498db; }
+        
+        .alert-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .alert-title { font-size: 16px; font-weight: 600; color: #2c3e50; }
+        .alert-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: white;
+        }
+        
+        .alert-critical ~ .alert-badge { background: #e74c3c; }
+        .alert-high ~ .alert-badge { background: #f39c12; }
+        .alert-medium ~ .alert-badge { background: #3498db; }
+        
+        .alert-detail { font-size: 14px; color: #555; margin-bottom: 12px; }
+        .alert-footer { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        .alert-source { color: #95a5a6; }
+        .alert-link { color: #3498db; text-decoration: none; font-weight: 600; }
+        
+        .update-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 12px;
+        }
+        
+        .update-meta { font-size: 12px; color: #95a5a6; margin-bottom: 4px; }
+        .update-title { font-size: 15px; font-weight: 600; color: #2c3e50; margin-bottom: 8px; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px;
+            color: #7f8c8d;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-bottom: 2px solid #ecf0f1;
+            background: #f8f9fa;
+        }
+        
+        td { padding: 12px; border-bottom: 1px solid #ecf0f1; color: #2c3e50; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .footer {
+            text-align: center;
+            color: #95a5a6;
+            font-size: 12px;
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🦠 Hantavirus Monitor</h1>
+            <p>Global outbreak tracking • Government response • Vaccine progress</p>
+            <div class="timestamp">Last updated: <span id="timestamp"></span> UTC</div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+            <button class="tab-btn" onclick="switchTab('alerts')">Alerts</button>
+            <button class="tab-btn" onclick="switchTab('updates')">Updates</button>
+            <button class="tab-btn" onclick="switchTab('regions')">Regions</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="metrics">
+                <div class="metric-card">
+                    <div class="metric-label">Americas</div>
+                    <div class="metric-value">229</div>
+                    <div class="metric-stat">
+                        <span>Deaths: <strong style="color: #e74c3c;">59</strong></span>
+                        <span>📈</span>
+                    </div>
+                    <div style="font-size: 13px; color: #95a5a6;">CFR: 25.7% • 8 countries</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-label">Europe</div>
+                    <div class="metric-value">19</div>
+                    <div class="metric-stat">
+                        <span>Deaths: <strong style="color: #e74c3c;">1</strong></span>
+                        <span>➡️</span>
+                    </div>
+                    <div style="font-size: 13px; color: #95a5a6;">CFR: 5.3% • 6 countries</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-label">Asia</div>
+                    <div class="metric-value">30,000</div>
+                    <div class="metric-stat">
+                        <span>Deaths: <strong style="color: #e74c3c;">3,000</strong></span>
+                        <span>⚖️</span>
+                    </div>
+                    <div style="font-size: 13px; color: #95a5a6;">CFR: 10.0% • 4 countries</div>
+                </div>
+            </div>
+
+            <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <h3 style="margin-bottom: 1rem; color: #2c3e50; font-size: 16px; font-weight: 600;">Global Summary</h3>
+                <div class="metrics">
+                    <div>
+                        <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 4px;">Total Cases (2025-2026)</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #2c3e50;">30,248+</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 4px;">Total Deaths</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #e74c3c;">3,060+</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 4px;">Countries Affected</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #3498db;">18+</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 4px;">Avg CFR</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #f39c12;">10.1%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Tab -->
+        <div id="alerts" class="tab-content">
+            <div class="alert-card alert-critical">
+                <div class="alert-header">
+                    <div class="alert-title">MV Hondius Cruise Outbreak</div>
+                    <div class="alert-badge">CRITICAL</div>
+                </div>
+                <div class="alert-detail">6 confirmed Andes virus cases, 3 deaths reported on cruise ship in South Atlantic</div>
+                <div class="alert-footer">
+                    <span class="alert-source">Source: WHO</span>
+                    <a href="https://www.who.int/emergencies/disease-outbreak-news/item/2026-DON599" target="_blank" class="alert-link">Read more →</a>
+                </div>
+            </div>
+
+            <div class="alert-card alert-high">
+                <div class="alert-header">
+                    <div class="alert-title">CDC Raises Travel Advisory</div>
+                    <div class="alert-badge">HIGH</div>
+                </div>
+                <div class="alert-detail">Level 3 alert for South America cruise and ground travel</div>
+                <div class="alert-footer">
+                    <span class="alert-source">Source: CDC</span>
+                    <a href="https://www.cdc.gov/hantavirus/about/andesvirus.html" target="_blank" class="alert-link">Read more →</a>
+                </div>
+            </div>
+
+            <div class="alert-card alert-high">
+                <div class="alert-header">
+                    <div class="alert-title">ECDC Threat Assessment Published</div>
+                    <div class="alert-badge">HIGH</div>
+                </div>
+                <div class="alert-detail">European authority issues updated guidance and infection prevention recommendations</div>
+                <div class="alert-footer">
+                    <span class="alert-source">Source: ECDC</span>
+                    <a href="https://www.ecdc.europa.eu/en/publications-data/hantavirus-associated-cluster-illness-cruise-ship-ecdc-assessment-and" target="_blank" class="alert-link">Read more →</a>
+                </div>
+            </div>
+
+            <div class="alert-card alert-medium">
+                <div class="alert-header">
+                    <div class="alert-title">Vaccine Development Progress</div>
+                    <div class="alert-badge">MEDIUM</div>
+                </div>
+                <div class="alert-detail">University of Bath international team developing vaccine candidate in response to outbreak</div>
+                <div class="alert-footer">
+                    <span class="alert-source">Source: Research</span>
+                    <a href="https://en.wikipedia.org/wiki/Hantavirus_vaccine" target="_blank" class="alert-link">Read more →</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Updates Tab -->
+        <div id="updates" class="tab-content">
+            <div class="update-item">
+                <div class="update-meta">May 8, 2026 • WHO</div>
+                <div class="update-title">Global Outbreak Fact Sheet - May 2026 Update</div>
+                <a href="https://www.who.int/news-room/fact-sheets/detail/hantavirus" target="_blank" class="alert-link">View source →</a>
+            </div>
+
+            <div class="update-item">
+                <div class="update-meta">May 7, 2026 • CDC</div>
+                <div class="update-title">Andes Virus Clinical Guidance</div>
+                <a href="https://www.cdc.gov/hantavirus/about/andesvirus.html" target="_blank" class="alert-link">View source →</a>
+            </div>
+
+            <div class="update-item">
+                <div class="update-meta">May 6, 2026 • ECDC</div>
+                <div class="update-title">Cruise Ship Cluster Assessment & Recommendations</div>
+                <a href="https://www.ecdc.europa.eu/en/publications-data/hantavirus-associated-cluster-illness-cruise-ship-ecdc-assessment-and" target="_blank" class="alert-link">View source →</a>
+            </div>
+
+            <div class="update-item">
+                <div class="update-meta">May 5, 2026 • WHO</div>
+                <div class="update-title">Hantavirus Outbreak Toolbox Resources</div>
+                <a href="https://www.who.int/emergencies/outbreak-toolkit/disease-outbreak-toolboxes/hantavirus-outbreak-toolbox" target="_blank" class="alert-link">View source →</a>
+            </div>
+
+            <div class="update-item">
+                <div class="update-meta">May 4, 2026 • PubMed</div>
+                <div class="update-title">Latest Vaccine Development Research (2025)</div>
+                <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11861054/" target="_blank" class="alert-link">View source →</a>
+            </div>
+        </div>
+
+        <!-- Regions Tab -->
+        <div id="regions" class="tab-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Region</th>
+                        <th style="text-align: center;">Cases</th>
+                        <th style="text-align: center;">Deaths</th>
+                        <th style="text-align: center;">CFR</th>
+                        <th style="text-align: center;">Trend</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Americas</td>
+                        <td style="text-align: center;">229</td>
+                        <td style="text-align: center; color: #e74c3c; font-weight: 600;">59</td>
+                        <td style="text-align: center;">25.7%</td>
+                        <td style="text-align: center; font-size: 18px;">📈</td>
+                    </tr>
+                    <tr>
+                        <td>Europe</td>
+                        <td style="text-align: center;">19</td>
+                        <td style="text-align: center; color: #e74c3c; font-weight: 600;">1</td>
+                        <td style="text-align: center;">5.3%</td>
+                        <td style="text-align: center; font-size: 18px;">➡️</td>
+                    </tr>
+                    <tr>
+                        <td>Asia</td>
+                        <td style="text-align: center;">30,000</td>
+                        <td style="text-align: center; color: #e74c3c; font-weight: 600;">3,000</td>
+                        <td style="text-align: center;">10.0%</td>
+                        <td style="text-align: center; font-size: 18px;">⚖️</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Data from WHO, CDC, ECDC | Updates every 6 hours | Last sync: <span id="footer-timestamp"></span> UTC</p>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Update timestamps
+        const now = new Date();
+        document.getElementById('timestamp').textContent = now.toLocaleString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'UTC'
+        });
+        document.getElementById('footer-timestamp').textContent = now.toLocaleString('en-US', { timeZone: 'UTC' });
+    </script>
+</body>
+</html>
