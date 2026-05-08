@@ -25,7 +25,7 @@ jobs:
         run: npm install axios cheerio
       
       - name: Fetch live data and update dashboard
-        run: node update-dashboard-live.js
+        run: node update-dashboard.js
       
       - name: Commit and push changes
         run: |
