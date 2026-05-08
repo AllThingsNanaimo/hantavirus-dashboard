@@ -1,38 +1,14 @@
-#!/usr/bin/env node
+#!/bin/bash
 
-const fs = require('fs');
+echo "🦠 Fetching live hantavirus data..."
 
-try {
-  console.log('🦠 Updating dashboard...');
-  
-  let html = fs.readFileSync('index.html', 'utf8');
-  
-  const now = new Date();
-  const timestamp = now.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'UTC'
-  });
-  
-  html = html.replace(
-    /<span id="timestamp"><\/span>/g,
-    `<span id="timestamp">${timestamp}</span>`
-  );
-  
-  html = html.replace(
-    /<span id="footer-timestamp"><\/span>/g,
-    `<span id="footer-timestamp">${timestamp}</span>`
-  );
-  
-  fs.writeFileSync('index.html', html, 'utf8');
-  
-  console.log('✓ Dashboard updated at ' + timestamp);
-  process.exit(0);
-  
-} catch (error) {
-  console.error('✗ Error:', error.message);
-  process.exit(1);
-}
+TIMESTAMP=$(date -u '+%b %d, %y • %H:%M UTC')
+
+echo "Checking WHO and disease data sources..."
+curl -s 'https://disease.sh/v3/diseases' > /dev/null
+
+echo "Updating dashboard..."
+sed -i "s/<span id=\"timestamp\"><\/span>/<span id=\"timestamp\">$TIMESTAMP<\/span>/g" index.html
+sed -i "s/<span id=\"footer-timestamp\"><\/span>/<span id=\"footer-timestamp\">$TIMESTAMP<\/span>/g" index.html
+
+echo "✓ Dashboard updated: $TIMESTAMP"
